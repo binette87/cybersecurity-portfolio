@@ -26,11 +26,29 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
 
-  /* HEADER */
-  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  /* SITE NAV */
+  .site-nav { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 200; }
+  .site-nav-inner { max-width: 1400px; margin: 0 auto; padding: 0 24px; display: flex; align-items: stretch; gap: 0; }
+  .site-nav-brand { display: flex; align-items: center; gap: 10px; padding: 14px 20px 14px 0; border-right: 1px solid var(--border); margin-right: 8px; text-decoration: none; flex-shrink: 0; }
+  .site-nav-brand .logo-icon { font-size: 18px; }
+  .site-nav-brand .logo-text { font-size: 15px; font-weight: 700; color: var(--blue); letter-spacing: -0.3px; }
+  .site-nav-brand .logo-sub { font-size: 11px; color: var(--muted); }
+  .nav-links { display: flex; align-items: stretch; gap: 0; overflow-x: auto; flex: 1; }
+  .nav-link { display: flex; align-items: center; gap: 6px; padding: 0 14px; font-size: 13px; font-weight: 500; color: var(--muted); text-decoration: none; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+  .nav-link:hover { color: var(--text); background: var(--surface2); }
+  .nav-link.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .nav-link .nav-icon { font-size: 14px; }
+  .nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; padding-left: 16px; flex-shrink: 0; }
+  .nav-badge { padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .nb-nist { background: rgba(0,120,212,0.2); color: var(--nist); border: 1px solid rgba(0,120,212,0.35); }
+  .nb-iso  { background: rgba(0,163,108,0.2); color: var(--iso);  border: 1px solid rgba(0,163,108,0.35); }
+  .nb-soc  { background: rgba(123,47,190,0.2); color: var(--purple); border: 1px solid rgba(123,47,190,0.35); }
+
+  /* HEADER (page title bar below nav) */
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
   .header-left { display: flex; align-items: center; gap: 16px; }
-  .logo { font-size: 20px; font-weight: 700; color: var(--blue); letter-spacing: -0.5px; }
-  .logo span { color: var(--muted); font-weight: 400; }
+  .logo { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+  .logo span { color: var(--muted); font-weight: 400; font-size: 14px; }
   .header-badges { display: flex; gap: 8px; flex-wrap: wrap; }
   .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
   .badge-nist { background: rgba(0,120,212,0.2); color: var(--nist); border: 1px solid rgba(0,120,212,0.4); }
@@ -261,17 +279,42 @@
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- SITE NAVIGATION -->
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a class="site-nav-brand" href="index.html">
+      <span class="logo-icon">🛡️</span>
+      <div>
+        <div class="logo-text">GRC Command Center</div>
+        <div class="logo-sub">binette87</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a class="nav-link active" href="index.html"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-link" href="#policies-section"><span class="nav-icon">📋</span> Policies</a>
+      <a class="nav-link" href="../grc/frameworks/nist-800-53/control-library.html"><span class="nav-icon">🔵</span> NIST 800-53</a>
+      <a class="nav-link" href="../grc/frameworks/iso-27001/control-library.html"><span class="nav-icon">🟢</span> ISO 27001</a>
+      <a class="nav-link" href="../grc/frameworks/soc2/control-library.html"><span class="nav-icon">🟣</span> SOC 2</a>
+      <a class="nav-link" href="../grc/risk-register/risk-register.html"><span class="nav-icon">🔴</span> Risk Register</a>
+      <a class="nav-link" href="../grc/incident-log/incident-log.html"><span class="nav-icon">🚨</span> Incidents</a>
+      <a class="nav-link" href="../grc/remediation/remediation-tracker.html"><span class="nav-icon">🔧</span> Remediation</a>
+      <a class="nav-link" href="../grc/audits/audit-schedule.html"><span class="nav-icon">📋</span> Audits</a>
+      <a class="nav-link" href="#sat-section"><span class="nav-icon">🎓</span> Training</a>
+    </div>
+    <div class="nav-right">
+      <span class="nav-badge nb-nist">NIST</span>
+      <span class="nav-badge nb-iso">ISO</span>
+      <span class="nav-badge nb-soc">SOC 2</span>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
 <div class="header">
   <div class="header-left">
     <div>
-      <div class="logo">GRC Command Center <span>/ binette87</span></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px;">Cybersecurity Portfolio — Governance, Risk & Compliance</div>
-    </div>
-    <div class="header-badges">
-      <span class="badge badge-nist">NIST 800-53</span>
-      <span class="badge badge-iso">ISO 27001</span>
-      <span class="badge badge-soc2">SOC 2</span>
+      <div class="logo">Command Center <span>— Cybersecurity Portfolio</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">Governance, Risk &amp; Compliance · NIST RMF · ISO 27001 · SOC 2</div>
     </div>
   </div>
   <div class="last-updated" id="lastUpdated"></div>
@@ -804,9 +847,100 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════════
+     POLICIES & PROCEDURES
+     ════════════════════════════════════════════════════════════ -->
+<div id="policies-section" class="card grid-1" style="margin-bottom:24px;">
+  <div class="card-header">
+    <div class="card-title">📋 Policies &amp; Procedures</div>
+    <span style="font-size:12px;color:var(--muted);">6 policies · POL-001 through POL-006 · Effective June 2026</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+
+    <a href="../grc/policies/html/POL-001-information-security-policy.html" style="text-decoration:none;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid var(--blue);border-radius:8px;padding:16px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderTopColor='var(--blue)';this.style.borderColor='var(--border)';this.style.borderTopColor='var(--blue)'">
+        <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">POL-001</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Information Security Policy</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Overarching ISMS framework, organizational commitment, and governance hierarchy</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge badge-nist" style="font-size:9px;">NIST PL-1</span>
+          <span class="badge badge-iso" style="font-size:9px;">ISO A.5.1</span>
+          <span class="badge badge-soc2" style="font-size:9px;">SOC CC1.1</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="../grc/policies/html/POL-002-access-control-policy.html" style="text-decoration:none;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid var(--blue);border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">POL-002</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Access Control Policy</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Account lifecycle, RBAC, least privilege, MFA, and remote access requirements</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge badge-nist" style="font-size:9px;">NIST AC-2/3/6</span>
+          <span class="badge badge-iso" style="font-size:9px;">ISO A.5.15</span>
+          <span class="badge badge-soc2" style="font-size:9px;">SOC CC6.1-6.3</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="../grc/policies/html/POL-003-incident-response-policy.html" style="text-decoration:none;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid var(--orange);border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">POL-003</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Incident Response Policy</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">IR lifecycle, classification, escalation SLAs, evidence handling, and post-mortem</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge badge-nist" style="font-size:9px;">NIST IR-4/6/8</span>
+          <span class="badge badge-iso" style="font-size:9px;">ISO A.5.24-28</span>
+          <span class="badge badge-soc2" style="font-size:9px;">SOC CC7.3-7.5</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="../grc/policies/html/POL-004-password-authentication-policy.html" style="text-decoration:none;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid var(--green);border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">POL-004</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Password &amp; Authentication Policy</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Password complexity, MFA requirements, lockout thresholds, and session management</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge badge-nist" style="font-size:9px;">NIST IA-2/5</span>
+          <span class="badge badge-iso" style="font-size:9px;">ISO A.8.5</span>
+          <span class="badge badge-soc2" style="font-size:9px;">SOC CC6.1-6.2</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="../grc/policies/html/POL-005-vulnerability-management-policy.html" style="text-decoration:none;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid var(--yellow);border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;color:var(--yellow);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">POL-005</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Vulnerability Management Policy</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Scanning frequency, CVSS-based SLAs, patch management, and POA&amp;M requirements</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge badge-nist" style="font-size:9px;">NIST RA-3/5</span>
+          <span class="badge badge-iso" style="font-size:9px;">ISO A.8.8</span>
+          <span class="badge badge-soc2" style="font-size:9px;">SOC CC7.1</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="../grc/policies/html/POL-006-risk-management-policy.html" style="text-decoration:none;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-top:3px solid var(--purple);border-radius:8px;padding:16px;">
+        <div style="font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">POL-006</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Risk Management Policy</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">NIST RMF lifecycle, 5×5 risk matrix, treatment options, and continuous monitoring</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge badge-nist" style="font-size:9px;">NIST RA-1/3</span>
+          <span class="badge badge-iso" style="font-size:9px;">ISO A.5.7/5.8</span>
+          <span class="badge badge-soc2" style="font-size:9px;">SOC CC3.1-3.4</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
      SECURITY AWARENESS TRAINING
      ════════════════════════════════════════════════════════════ -->
-<div class="card sat-section" style="margin-bottom:24px;">
+<div id="sat-section" class="card sat-section" style="margin-bottom:24px;">
   <div class="sat-header">
     <div class="sat-icon" style="background:rgba(88,166,255,0.15);color:var(--blue);">🎓</div>
     <div>
