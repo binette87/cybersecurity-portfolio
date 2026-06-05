@@ -3,6 +3,13 @@ name: GRC Command Center Sync
 on:
   push:
     branches: [main]
+    paths:
+      - 'grc/scripts/**'
+      - 'grc/frameworks/**/*.csv'
+      - 'grc/risk-register/*.csv'
+      - 'grc/incident-log/*.csv'
+      - 'grc/remediation/*.csv'
+      - 'grc/audits/*.csv'
   schedule:
     - cron: '0 0 * * 0'
   workflow_dispatch:
@@ -53,6 +60,6 @@ jobs:
         run: |
           git config user.name "GRC Bot"
           git config user.email "grc-bot@github.com"
-          git add -f grc/reports/compliance-report-latest.md
+          git add grc/reports/compliance-report-latest.md
           git diff --staged --quiet || git commit -m "bot: update compliance report [skip ci]"
           git push
