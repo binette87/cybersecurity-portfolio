@@ -2,7 +2,7 @@ import pandas as pd, sys
 
 checks = [
     ("grc/frameworks/nist-800-53/control-library.csv", ["Control_ID","Implementation_Status"]),
-    ("grc/frameworks/iso-27001/control-library.csv",   ["Control_ID","Status"]),
+    ("grc/frameworks/iso-27001/control-library.csv",   ["Control_ID","Implementation_Status"]),
     ("grc/frameworks/soc2/control-library.csv",        ["Criteria_ID","Implementation_Status"]),
     ("grc/risk-register/risk-register.csv",            ["Risk_ID","Risk_Level","Status"]),
     ("grc/incident-log/incident-log.csv",              ["Incident_ID","Severity","Status"]),

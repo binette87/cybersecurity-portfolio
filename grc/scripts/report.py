@@ -31,7 +31,7 @@ lines = [
     "| Framework | Implemented | Partial | Not Implemented | Score |",
     "|-----------|-------------|---------|-----------------|-------|",
     f"| NIST 800-53 Rev 5 | {count(nist,'Implementation_Status','implemented')} | {count(nist,'Implementation_Status','partial')} | {count(nist,'Implementation_Status','not impl')} | {pct(nist,'Implementation_Status','implemented')}% |",
-    f"| ISO 27001:2022    | {count(iso,'Status','implemented')} | {count(iso,'Status','partial')} | {count(iso,'Status','not impl')} | {pct(iso,'Status','implemented')}% |",
+    f"| ISO 27001:2022    | {count(iso,'Implementation_Status','implemented')} | {count(iso,'Implementation_Status','partial')} | {count(iso,'Implementation_Status','not impl')} | {pct(iso,'Implementation_Status','implemented')}% |",
     f"| SOC 2             | {count(soc2,'Implementation_Status','implemented')} | {count(soc2,'Implementation_Status','partial')} | {count(soc2,'Implementation_Status','not impl')} | {pct(soc2,'Implementation_Status','implemented')}% |",
     "",
     "## Risk Summary",

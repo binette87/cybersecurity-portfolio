@@ -15,7 +15,7 @@ def score(df, col):
     return impl, partial, total, pct
 
 ni, np_, nt, ns  = score(nist, "Implementation_Status")
-ii, ip,  it, is_ = score(iso,  "Status")
+ii, ip,  it, is_ = score(iso,  "Implementation_Status")
 si, sp,  st, ss  = score(soc2, "Implementation_Status")
 
 open_risks = int(risk["Status"].str.lower().str.contains("open", na=False).sum())
