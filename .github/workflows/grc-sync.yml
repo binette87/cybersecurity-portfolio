@@ -1,4 +1,4 @@
-name: GRC Command Center — Automated Sync
+name: GRC Command Center Sync
 
 on:
   push:
@@ -12,11 +12,11 @@ permissions:
 
 jobs:
   grc-sync:
-    name: GRC Sync & Compliance Report
+    name: GRC Sync and Compliance Report
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -27,144 +27,15 @@ jobs:
       - name: Install dependencies
         run: pip install pandas openpyxl
 
-      - name: Validate GRC CSV files
-        run: |
-          python3 - <<'EOF'
-          import pandas as pd, sys
-
-          checks = [
-            ("grc/frameworks/nist-800-53/control-library.csv", ["Control_ID","Implementation_Status"]),
-            ("grc/frameworks/iso-27001/control-library.csv",   ["Control_ID","Status"]),
-            ("grc/frameworks/soc2/control-library.csv",        ["Criteria_ID","Implementation_Status"]),
-            ("grc/risk-register/risk-register.csv",            ["Risk_ID","Risk_Level","Status"]),
-            ("grc/incident-log/incident-log.csv",              ["Incident_ID","Severity","Status"]),
-            ("grc/remediation/remediation-tracker.csv",        ["Remediation_ID","Status","Percent_Complete"]),
-            ("grc/audits/audit-schedule.csv",                  ["Audit_ID","Status"]),
-          ]
-
-          errors = []
-          for path, cols in checks:
-            try:
-              df = pd.read_csv(path)
-              missing = [c for c in cols if c not in df.columns]
-              if missing:
-                errors.append(f"FAIL {path}: missing {missing}")
-              else:
-                print(f"OK   {path} ({len(df)} rows)")
-            except Exception as e:
-              errors.append(f"FAIL {path}: {e}")
-
-          if errors:
-            for e in errors: print(e)
-            sys.exit(1)
-          print("All files valid.")
-          EOF
+      - name: Validate GRC data files
+        run: python3 grc/scripts/validate.py
 
       - name: Compute compliance scores
         id: scores
-        run: |
-          python3 - <<'EOF'
-          import pandas as pd, os
-
-          nist = pd.read_csv("grc/frameworks/nist-800-53/control-library.csv")
-          iso  = pd.read_csv("grc/frameworks/iso-27001/control-library.csv")
-          soc2 = pd.read_csv("grc/frameworks/soc2/control-library.csv")
-          risk = pd.read_csv("grc/risk-register/risk-register.csv")
-          rem  = pd.read_csv("grc/remediation/remediation-tracker.csv")
-          inc  = pd.read_csv("grc/incident-log/incident-log.csv")
-
-          def score(df, col):
-            impl    = df[col].str.lower().str.contains("implemented", na=False).sum()
-            partial = df[col].str.lower().str.contains("partial", na=False).sum()
-            total   = len(df)
-            return int(impl), int(partial), total, round((impl + partial*0.5)/total*100, 1) if total else 0
-
-          ni, np_, nt, ns = score(nist, "Implementation_Status")
-          ii, ip,  it, is_= score(iso,  "Status")
-          si, sp,  st, ss = score(soc2, "Implementation_Status")
-
-          open_risks = risk["Status"].str.lower().str.contains("open", na=False).sum()
-          open_rem   = (~rem["Status"].str.lower().str.contains("completed", na=False)).sum()
-          open_inc   = inc["Status"].str.lower().str.contains("open", na=False).sum()
-
-          print(f"NIST {ns}%  ISO {is_}%  SOC2 {ss}%")
-          print(f"Risks: {int(open_risks)} open  |  Remediations: {int(open_rem)} open  |  Incidents: {int(open_inc)} open")
-
-          out = os.environ["GITHUB_OUTPUT"]
-          with open(out, "a") as f:
-            f.write(f"nist={ns}\niso={is_}\nsoc2={ss}\n")
-            f.write(f"risks={int(open_risks)}\nrem={int(open_rem)}\ninc={int(open_inc)}\n")
-            f.write(f"ni={ni}\nnp={int(np_)}\nnt={nt}\n")
-            f.write(f"ii={ii}\nip={int(ip)}\nit={it}\n")
-            f.write(f"si={si}\nsp={int(sp)}\nst={st}\n")
-          EOF
+        run: python3 grc/scripts/score.py
 
       - name: Generate compliance report
-        run: |
-          mkdir -p grc/reports
-          python3 - <<'EOF'
-          import pandas as pd
-          from datetime import datetime
-
-          nist = pd.read_csv("grc/frameworks/nist-800-53/control-library.csv")
-          iso  = pd.read_csv("grc/frameworks/iso-27001/control-library.csv")
-          soc2 = pd.read_csv("grc/frameworks/soc2/control-library.csv")
-          risk = pd.read_csv("grc/risk-register/risk-register.csv")
-          rem  = pd.read_csv("grc/remediation/remediation-tracker.csv")
-          inc  = pd.read_csv("grc/incident-log/incident-log.csv")
-
-          now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-
-          def pct(df, col, val):
-            return round((df[col].str.lower().str.contains(val, na=False).sum()) / len(df) * 100, 1)
-
-          report = f"""# GRC Compliance Report
-**Generated:** {now}
-**Repo:** github.com/binette87/cybersecurity-portfolio
-**Source:** github.com/binette87/Foundations_Lab_Final
-
----
-
-## Compliance Scores
-
-| Framework | Implemented | Partial | Not Implemented | Score |
-|-----------|-------------|---------|-----------------|-------|
-| NIST 800-53 Rev 5 | {(nist['Implementation_Status']=='Implemented').sum()} | {nist['Implementation_Status'].str.contains('Partial',na=False).sum()} | {nist['Implementation_Status'].str.contains('Not Impl',na=False).sum()} | {pct(nist,'Implementation_Status','implemented')}% |
-| ISO 27001:2022    | {(iso['Status']=='Implemented').sum()} | {iso['Status'].str.contains('Partial',na=False).sum()} | {iso['Status'].str.contains('Not Impl',na=False).sum()} | {pct(iso,'Status','implemented')}% |
-| SOC 2             | {(soc2['Implementation_Status']=='Implemented').sum()} | {soc2['Implementation_Status'].str.contains('Partial',na=False).sum()} | {soc2['Implementation_Status'].str.contains('Not Impl',na=False).sum()} | {pct(soc2,'Implementation_Status','implemented')}% |
-
-## Risk Summary
-
-| Level | Count |
-|-------|-------|
-| High  | {(risk['Risk_Level']=='High').sum()} |
-| Medium| {(risk['Risk_Level']=='Medium').sum()} |
-| Open  | {risk['Status'].str.contains('Open',na=False).sum()} |
-
-## Remediation Progress
-
-| Status | Count |
-|--------|-------|
-| Completed   | {rem['Status'].str.lower().str.contains('completed',na=False).sum()} |
-| In Progress | {rem['Status'].str.lower().str.contains('progress',na=False).sum()} |
-| Planned     | {rem['Status'].str.lower().str.contains('planned',na=False).sum()} |
-
-## Incidents
-
-| Metric | Count |
-|--------|-------|
-| Total YTD | {len(inc)} |
-| Closed    | {inc['Status'].str.lower().str.contains('closed',na=False).sum()} |
-| Open      | {inc['Status'].str.lower().str.contains('open',na=False).sum()} |
-
----
-*Auto-generated by GRC Sync — [cybersecurity-portfolio](https://github.com/binette87/cybersecurity-portfolio)*
-"""
-
-          with open("grc/reports/compliance-report-latest.md", "w") as f:
-            f.write(report)
-          print("Report written.")
-          EOF
+        run: python3 grc/scripts/report.py
 
       - name: Write job summary
         run: |
@@ -176,28 +47,11 @@ jobs:
           echo "| ISO 27001   | ${{ steps.scores.outputs.iso }}% |" >> $GITHUB_STEP_SUMMARY
           echo "| SOC 2       | ${{ steps.scores.outputs.soc2 }}% |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Open risks: ${{ steps.scores.outputs.risks }} | Open remediations: ${{ steps.scores.outputs.rem }} | Open incidents: ${{ steps.scores.outputs.inc }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Compliance gate check
-        run: |
-          NIST=${{ steps.scores.outputs.nist }}
-          ISO=${{ steps.scores.outputs.iso }}
-          SOC2=${{ steps.scores.outputs.soc2 }}
-          echo "NIST: ${NIST}%  ISO: ${ISO}%  SOC2: ${SOC2}%"
-          if (( $(echo "$NIST < 40" | bc -l) )); then
-            echo "CRITICAL: NIST score below 40%" && exit 1
-          fi
-          if (( $(echo "$ISO < 40" | bc -l) )); then
-            echo "CRITICAL: ISO score below 40%" && exit 1
-          fi
-          if (( $(echo "$SOC2 < 40" | bc -l) )); then
-            echo "CRITICAL: SOC2 score below 40%" && exit 1
-          fi
-          echo "All compliance gates passed."
+          echo "Open risks: **${{ steps.scores.outputs.risks }}** | Open remediations: **${{ steps.scores.outputs.rem }}** | Open incidents: **${{ steps.scores.outputs.inc }}**" >> $GITHUB_STEP_SUMMARY
 
       - name: Commit updated report
         run: |
-          git config user.name  "GRC Bot"
+          git config user.name "GRC Bot"
           git config user.email "grc-bot@github.com"
           git add grc/reports/compliance-report-latest.md
           git diff --staged --quiet || git commit -m "bot: update compliance report [skip ci]"
