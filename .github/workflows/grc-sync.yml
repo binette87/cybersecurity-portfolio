@@ -1,0 +1,474 @@
+name: GRC Command Center — Automated Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'grc/**'
+      - 'dashboard/**'
+      - '.github/workflows/grc-sync.yml'
+  schedule:
+    # Weekly audit run — every Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      run_full_assessment:
+        description: 'Run full compliance assessment'
+        required: false
+        default: 'false'
+        type: boolean
+      notify_slack:
+        description: 'Send Slack notification on completion'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+  SOURCE_REPO: 'binette87/Foundations_Lab_Final'
+  PORTFOLIO_REPO: 'binette87/cybersecurity-portfolio'
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 1: Validate GRC Data Integrity
+  # ─────────────────────────────────────────────────────────────────────────
+  validate-grc-data:
+    name: 🔍 Validate GRC Data Integrity
+    runs-on: ubuntu-latest
+    outputs:
+      nist_score: ${{ steps.compute-scores.outputs.nist_score }}
+      iso_score: ${{ steps.compute-scores.outputs.iso_score }}
+      soc2_score: ${{ steps.compute-scores.outputs.soc2_score }}
+      open_risks: ${{ steps.compute-scores.outputs.open_risks }}
+      open_remediations: ${{ steps.compute-scores.outputs.open_remediations }}
+
+    steps:
+      - name: Checkout portfolio repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install pandas openpyxl tabulate jinja2
+
+      - name: Validate CSV structure
+        run: |
+          python3 << 'EOF'
+          import pandas as pd
+          import sys
+
+          files = {
+              'grc/frameworks/nist-800-53/control-library.csv': ['Control_ID','Family','Control_Name','Implementation_Status'],
+              'grc/frameworks/iso-27001/control-library.csv': ['Control_ID','Clause','Control_Name','Status'],
+              'grc/frameworks/soc2/control-library.csv': ['Criteria_ID','TSC_Category','Criteria_Name','Implementation_Status'],
+              'grc/risk-register/risk-register.csv': ['Risk_ID','Risk_Title','Likelihood','Impact','Risk_Level','Status'],
+              'grc/incident-log/incident-log.csv': ['Incident_ID','Title','Severity','Status'],
+              'grc/remediation/remediation-tracker.csv': ['Remediation_ID','Title','Priority','Status','Percent_Complete'],
+              'grc/audits/audit-schedule.csv': ['Audit_ID','Audit_Name','Status'],
+          }
+
+          errors = []
+          for filepath, required_cols in files.items():
+              try:
+                  df = pd.read_csv(filepath)
+                  missing = [c for c in required_cols if c not in df.columns]
+                  if missing:
+                      errors.append(f"  ✗ {filepath}: missing columns {missing}")
+                  else:
+                      print(f"  ✓ {filepath} ({len(df)} rows, all required columns present)")
+              except Exception as e:
+                  errors.append(f"  ✗ {filepath}: {e}")
+
+          if errors:
+              print("\nVALIDATION ERRORS:")
+              for e in errors: print(e)
+              sys.exit(1)
+          else:
+              print("\n✅ All GRC data files validated successfully")
+          EOF
+
+      - name: Compute compliance scores
+        id: compute-scores
+        run: |
+          python3 << 'EOF'
+          import pandas as pd
+          import os
+
+          def score(df, col):
+              impl = df[col].str.lower().str.contains('implemented').sum()
+              partial = df[col].str.lower().str.contains('partial').sum()
+              total = len(df[~df[col].str.lower().isin(['n/a','not applicable',''])])
+              score_pct = round((impl + partial * 0.5) / total * 100, 1) if total else 0
+              return int(impl), int(partial), total, score_pct
+
+          nist = pd.read_csv('grc/frameworks/nist-800-53/control-library.csv')
+          iso  = pd.read_csv('grc/frameworks/iso-27001/control-library.csv')
+          soc2 = pd.read_csv('grc/frameworks/soc2/control-library.csv')
+          risk = pd.read_csv('grc/risk-register/risk-register.csv')
+          rem  = pd.read_csv('grc/remediation/remediation-tracker.csv')
+
+          ni, np_, nt, ns = score(nist, 'Implementation_Status')
+          ii, ip, it, is_ = score(iso, 'Status')
+          si, sp, st, ss = score(soc2, 'Implementation_Status')
+
+          open_risks = len(risk[risk['Status'].str.lower().isin(['open','in progress'])])
+          open_rem = len(rem[~rem['Status'].str.lower().isin(['completed','done','closed'])])
+
+          print(f"NIST Score: {ns}% ({ni} impl, {np_} partial / {nt} total)")
+          print(f"ISO Score:  {is_}% ({ii} impl, {ip} partial / {it} total)")
+          print(f"SOC2 Score: {ss}% ({si} impl, {sp} partial / {st} total)")
+          print(f"Open Risks: {open_risks}")
+          print(f"Open Remediations: {open_rem}")
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"nist_score={ns}\n")
+              f.write(f"iso_score={is_}\n")
+              f.write(f"soc2_score={ss}\n")
+              f.write(f"open_risks={open_risks}\n")
+              f.write(f"open_remediations={open_rem}\n")
+          EOF
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 2: Sync Source Lab Evidence
+  # ─────────────────────────────────────────────────────────────────────────
+  sync-lab-evidence:
+    name: 🔗 Sync Source Lab Evidence
+    runs-on: ubuntu-latest
+    needs: validate-grc-data
+
+    steps:
+      - name: Checkout portfolio repo
+        uses: actions/checkout@v4
+
+      - name: Fetch source lab repo manifest
+        run: |
+          echo "Fetching artifact manifest from Foundations_Lab_Final..."
+          curl -s \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ env.SOURCE_REPO }}/git/trees/main?recursive=1" \
+            | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          artifacts = [f['path'] for f in data.get('tree',[]) if f['type']=='blob']
+          print(f'Found {len(artifacts)} artifacts in source repo')
+          # Write summary
+          with open('grc/.lab-artifact-manifest.txt','w') as fh:
+              fh.write(f'Source: https://github.com/${{ env.SOURCE_REPO }}\n')
+              fh.write(f'Synced: $(date -u +\"%Y-%m-%d %H:%M UTC\")\n')
+              fh.write(f'Total artifacts: {len(artifacts)}\n\n')
+              for a in sorted(artifacts):
+                  fh.write(f'{a}\n')
+          print('Manifest written to grc/.lab-artifact-manifest.txt')
+          "
+
+      - name: Validate evidence mapping coverage
+        run: |
+          python3 << 'EOF'
+          import pandas as pd
+
+          # Load all control libraries and check evidence artifacts are cited
+          dfs = {
+              'NIST': (pd.read_csv('grc/frameworks/nist-800-53/control-library.csv'), 'Evidence_Artifact'),
+              'ISO':  (pd.read_csv('grc/frameworks/iso-27001/control-library.csv'),  'Evidence'),
+              'SOC2': (pd.read_csv('grc/frameworks/soc2/control-library.csv'),        'Evidence_Artifact'),
+          }
+
+          print("Evidence coverage analysis:")
+          for framework, (df, col) in dfs.items():
+              if col in df.columns:
+                  with_evidence = df[df[col].notna() & (df[col] != '') & (df[col] != '—')].shape[0]
+                  total = len(df)
+                  pct = round(with_evidence/total*100,1)
+                  print(f"  {framework}: {with_evidence}/{total} controls have evidence ({pct}%)")
+          EOF
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 3: Generate GRC Compliance Report
+  # ─────────────────────────────────────────────────────────────────────────
+  generate-report:
+    name: 📊 Generate Compliance Report
+    runs-on: ubuntu-latest
+    needs: [validate-grc-data, sync-lab-evidence]
+
+    steps:
+      - name: Checkout portfolio repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install pandas openpyxl tabulate jinja2
+
+      - name: Generate compliance report
+        run: |
+          python3 << 'PYEOF'
+          import pandas as pd
+          from datetime import datetime
+
+          nist = pd.read_csv('grc/frameworks/nist-800-53/control-library.csv')
+          iso  = pd.read_csv('grc/frameworks/iso-27001/control-library.csv')
+          soc2 = pd.read_csv('grc/frameworks/soc2/control-library.csv')
+          risk = pd.read_csv('grc/risk-register/risk-register.csv')
+          rem  = pd.read_csv('grc/remediation/remediation-tracker.csv')
+          inc  = pd.read_csv('grc/incident-log/incident-log.csv')
+
+          now = datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
+
+          report = f"""# GRC Compliance Report
+
+**Generated:** {now}
+**Portfolio:** github.com/binette87/cybersecurity-portfolio
+**Source Lab:** github.com/binette87/Foundations_Lab_Final
+
+---
+
+## Compliance Scores
+
+| Framework | Implemented | Partial | Not Implemented | Score |
+|-----------|-------------|---------|-----------------|-------|
+| NIST 800-53 Rev 5 | {(nist['Implementation_Status']=='Implemented').sum()} | {nist['Implementation_Status'].str.contains('Partial',na=False).sum()} | {nist['Implementation_Status'].str.contains('Not',na=False).sum()} | {round((nist['Implementation_Status']=='Implemented').sum()/len(nist)*100,1)}% |
+| ISO 27001:2022 | {(iso['Status']=='Implemented').sum()} | {iso['Status'].str.contains('Partial',na=False).sum()} | {iso['Status'].str.contains('Not',na=False).sum()} | {round((iso['Status']=='Implemented').sum()/len(iso)*100,1)}% |
+| SOC 2 | {(soc2['Implementation_Status']=='Implemented').sum()} | {soc2['Implementation_Status'].str.contains('Partial',na=False).sum()} | {soc2['Implementation_Status'].str.contains('Not',na=False).sum()} | {round((soc2['Implementation_Status']=='Implemented').sum()/len(soc2)*100,1)}% |
+
+## Risk Summary
+
+| Risk Level | Count |
+|------------|-------|
+| High | {(risk['Risk_Level']=='High').sum()} |
+| Medium | {(risk['Risk_Level']=='Medium').sum()} |
+| Low | {(risk['Risk_Level']=='Low').sum()} |
+| Open | {risk['Status'].str.contains('Open',na=False).sum()} |
+| Accepted | {(risk['Status']=='Accepted').sum()} |
+
+## Remediation Progress
+
+| Status | Count |
+|--------|-------|
+| Completed | {rem['Status'].str.lower().str.contains('completed',na=False).sum()} |
+| In Progress | {rem['Status'].str.lower().str.contains('progress',na=False).sum()} |
+| Planned | {rem['Status'].str.lower().str.contains('planned',na=False).sum()} |
+
+## Incident Summary
+
+- **Total Incidents YTD:** {len(inc)}
+- **Closed:** {inc['Status'].str.lower().str.contains('closed',na=False).sum()}
+- **Open:** {inc['Status'].str.lower().str.contains('open',na=False).sum()}
+
+---
+
+*Auto-generated by GRC Sync pipeline — github.com/binette87/cybersecurity-portfolio*
+"""
+
+          with open('grc/reports/compliance-report-latest.md', 'w') as f:
+              f.write(report)
+
+          print("Report generated successfully")
+          print(report[:500])
+          PYEOF
+
+      - name: Commit updated report
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 GRC sync: auto-update compliance report [${{ github.run_number }}]"
+          file_pattern: "grc/reports/*.md grc/.lab-artifact-manifest.txt"
+          commit_author: "GRC Bot <grc-bot@github.com>"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 4: Compliance Gate Check
+  # ─────────────────────────────────────────────────────────────────────────
+  compliance-gate:
+    name: 🚦 Compliance Gate Check
+    runs-on: ubuntu-latest
+    needs: [validate-grc-data, generate-report]
+
+    steps:
+      - name: Evaluate compliance thresholds
+        run: |
+          NIST_SCORE="${{ needs.validate-grc-data.outputs.nist_score }}"
+          ISO_SCORE="${{ needs.validate-grc-data.outputs.iso_score }}"
+          SOC2_SCORE="${{ needs.validate-grc-data.outputs.soc2_score }}"
+          OPEN_RISKS="${{ needs.validate-grc-data.outputs.open_risks }}"
+
+          echo "═══════════════════════════════════════════"
+          echo "   GRC COMPLIANCE GATE RESULTS"
+          echo "═══════════════════════════════════════════"
+          echo ""
+          echo "  NIST 800-53:  ${NIST_SCORE}%  (target: ≥80%)"
+          echo "  ISO 27001:    ${ISO_SCORE}%  (target: ≥80%)"
+          echo "  SOC 2:        ${SOC2_SCORE}%  (target: ≥80%)"
+          echo "  Open Risks:   ${OPEN_RISKS}   (threshold: <20)"
+          echo ""
+
+          PASS=true
+          WARNINGS=""
+
+          if [ "$NIST_SCORE" -lt 50 ]; then
+            echo "  ❌ FAIL: NIST score below critical threshold (50%)"
+            PASS=false
+          elif [ "$NIST_SCORE" -lt 80 ]; then
+            echo "  ⚠️  WARN: NIST score below target (80%) — current: ${NIST_SCORE}%"
+          else
+            echo "  ✅ PASS: NIST score meets target"
+          fi
+
+          if [ "$ISO_SCORE" -lt 50 ]; then
+            echo "  ❌ FAIL: ISO score below critical threshold (50%)"
+            PASS=false
+          elif [ "$ISO_SCORE" -lt 80 ]; then
+            echo "  ⚠️  WARN: ISO score below target (80%) — current: ${ISO_SCORE}%"
+          else
+            echo "  ✅ PASS: ISO score meets target"
+          fi
+
+          if [ "$SOC2_SCORE" -lt 50 ]; then
+            echo "  ❌ FAIL: SOC 2 score below critical threshold (50%)"
+            PASS=false
+          elif [ "$SOC2_SCORE" -lt 80 ]; then
+            echo "  ⚠️  WARN: SOC 2 score below target (80%) — current: ${SOC2_SCORE}%"
+          else
+            echo "  ✅ PASS: SOC 2 score meets target"
+          fi
+
+          if [ "$OPEN_RISKS" -gt 20 ]; then
+            echo "  ⚠️  WARN: High number of open risks: ${OPEN_RISKS}"
+          else
+            echo "  ✅ PASS: Open risk count within threshold"
+          fi
+
+          echo ""
+          if [ "$PASS" = "true" ]; then
+            echo "  🟢 OVERALL: GRC GATE PASSED"
+          else
+            echo "  🔴 OVERALL: GRC GATE FAILED — Review required"
+            exit 1
+          fi
+          echo "═══════════════════════════════════════════"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 5: Security Scan (SAST check on GRC scripts)
+  # ─────────────────────────────────────────────────────────────────────────
+  security-scan:
+    name: 🔐 Security Scan
+    runs-on: ubuntu-latest
+    needs: validate-grc-data
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+        continue-on-error: true
+
+      - name: Upload Trivy SARIF results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 6: Generate Summary Badge Data
+  # ─────────────────────────────────────────────────────────────────────────
+  generate-badges:
+    name: 🏅 Update Compliance Badges
+    runs-on: ubuntu-latest
+    needs: [validate-grc-data, compliance-gate]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate badge data
+        run: |
+          NIST="${{ needs.validate-grc-data.outputs.nist_score }}"
+          ISO="${{ needs.validate-grc-data.outputs.iso_score }}"
+          SOC2="${{ needs.validate-grc-data.outputs.soc2_score }}"
+
+          # Determine colors
+          color_for() {
+            if [ "$1" -ge 80 ]; then echo "brightgreen"
+            elif [ "$1" -ge 70 ]; then echo "yellow"
+            elif [ "$1" -ge 50 ]; then echo "orange"
+            else echo "red"; fi
+          }
+
+          mkdir -p .github/badges
+
+          cat > .github/badges/badge-data.json << BADGES
+          {
+            "nist_score": "${NIST}",
+            "nist_color": "$(color_for $NIST)",
+            "iso_score": "${ISO}",
+            "iso_color": "$(color_for $ISO)",
+            "soc2_score": "${SOC2}",
+            "soc2_color": "$(color_for $SOC2)",
+            "last_sync": "$(date -u +%Y---%m---%d)",
+            "workflow_run": "${{ github.run_number }}"
+          }
+          BADGES
+
+          echo "Badge data generated:"
+          cat .github/badges/badge-data.json
+
+      - name: Commit badge data
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🏅 Update GRC compliance badges [run ${{ github.run_number }}]"
+          file_pattern: ".github/badges/*.json"
+          commit_author: "GRC Bot <grc-bot@github.com>"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 7: Pipeline Summary
+  # ─────────────────────────────────────────────────────────────────────────
+  pipeline-summary:
+    name: 📋 Pipeline Summary
+    runs-on: ubuntu-latest
+    needs: [validate-grc-data, sync-lab-evidence, generate-report, compliance-gate, generate-badges]
+    if: always()
+
+    steps:
+      - name: Output pipeline summary
+        run: |
+          echo "# 🛡️ GRC Sync Pipeline — Run #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Compliance Scores" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Framework | Score | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| NIST 800-53 Rev 5 | ${{ needs.validate-grc-data.outputs.nist_score }}% | ⚠️ Below 80% target |" >> $GITHUB_STEP_SUMMARY
+          echo "| ISO 27001:2022 | ${{ needs.validate-grc-data.outputs.iso_score }}% | ⚠️ Below 80% target |" >> $GITHUB_STEP_SUMMARY
+          echo "| SOC 2 | ${{ needs.validate-grc-data.outputs.soc2_score }}% | ⚠️ Below 80% target |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Risk & Remediation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Open Risks:** ${{ needs.validate-grc-data.outputs.open_risks }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Open Remediations:** ${{ needs.validate-grc-data.outputs.open_remediations }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Source: [Foundations_Lab_Final](https://github.com/binette87/Foundations_Lab_Final)*" >> $GITHUB_STEP_SUMMARY
