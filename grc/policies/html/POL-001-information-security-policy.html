@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POL-001 — Information Security Policy</title>
+<style>
+  :root { --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149; }
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.7; }
+  .topbar { background:var(--surface);border-bottom:1px solid var(--border);padding:12px 40px;display:flex;align-items:center;justify-content:space-between; }
+  .topbar a { color:var(--blue);text-decoration:none;font-size:13px; }
+  .doc-wrap { max-width:900px;margin:0 auto;padding:40px 40px 80px; }
+  .doc-header { border-bottom:3px solid var(--blue);padding-bottom:24px;margin-bottom:32px; }
+  .doc-id { font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px; }
+  .doc-title { font-size:28px;font-weight:700;line-height:1.2;margin-bottom:16px; }
+  .doc-meta { display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px; }
+  .meta-item { background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px; }
+  .meta-label { font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px; }
+  .meta-value { font-size:13px;font-weight:600; }
+  h2 { font-size:16px;font-weight:700;color:var(--blue);margin:32px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border); }
+  h3 { font-size:14px;font-weight:700;margin:20px 0 8px;color:var(--text); }
+  p { margin-bottom:12px;color:var(--text);line-height:1.8; }
+  ul,ol { margin:8px 0 16px 20px; }
+  li { margin-bottom:6px;line-height:1.7; }
+  .policy-box { background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:6px;padding:16px 20px;margin:16px 0; }
+  .warn-box { background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);border-left:4px solid var(--red);border-radius:6px;padding:14px 18px;margin:14px 0; }
+  .ref-box { background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px 20px;margin:16px 0; }
+  .ref-tag { display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;margin:3px; }
+  .tag-nist { background:rgba(0,120,212,0.2);color:#58a6ff;border:1px solid rgba(0,120,212,0.3); }
+  .tag-iso { background:rgba(0,163,108,0.2);color:#3fb950;border:1px solid rgba(0,163,108,0.3); }
+  .tag-soc { background:rgba(163,113,247,0.2);color:#a371f7;border:1px solid rgba(163,113,247,0.3); }
+  .sig-block { display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px; }
+  .sig-line { border-top:1px solid var(--border);padding-top:8px;font-size:12px;color:var(--muted); }
+  .version-table { width:100%;border-collapse:collapse;margin:16px 0; }
+  .version-table th { background:var(--surface2);padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border); }
+  .version-table td { padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px; }
+  @media print { body{background:#fff;color:#000;} .topbar{display:none;} }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="../../dashboard/index.html">← GRC Command Center</a>
+  <span style="color:var(--muted);font-size:12px;">POL-001 · Information Security Policy · v1.0</span>
+  <a href="#" onclick="window.print()">🖨 Print / Save PDF</a>
+</div>
+
+<div class="doc-wrap">
+  <div class="doc-header">
+    <div class="doc-id">POL-001 · Governance</div>
+    <div class="doc-title">Information Security Policy</div>
+    <div style="font-size:13px;color:var(--muted);">Establishes the overarching framework and organizational commitment to information security governance.</div>
+    <div class="doc-meta">
+      <div class="meta-item"><div class="meta-label">Document ID</div><div class="meta-value">POL-001</div></div>
+      <div class="meta-item"><div class="meta-label">Version</div><div class="meta-value">1.0</div></div>
+      <div class="meta-item"><div class="meta-label">Effective Date</div><div class="meta-value">June 2026</div></div>
+      <div class="meta-item"><div class="meta-label">Next Review</div><div class="meta-value">June 2027</div></div>
+    </div>
+  </div>
+
+  <div class="ref-box">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Regulatory & Framework Alignment</div>
+    <span class="ref-tag tag-nist">NIST SP 800-53 Rev 5 — PL-1, CA-1, RA-1</span>
+    <span class="ref-tag tag-iso">ISO 27001:2022 — A.5.1, A.5.2</span>
+    <span class="ref-tag tag-soc">SOC 2 — CC1.1, CC3.1</span>
+  </div>
+
+  <h2>1. Purpose</h2>
+  <p>This Information Security Policy establishes the organizational commitment to protecting the confidentiality, integrity, and availability of information assets. It defines the governance framework, roles and responsibilities, and the minimum security standards that apply to all information systems, personnel, and third parties operating within or on behalf of this organization.</p>
+  <p>This policy serves as the apex document in the information security policy hierarchy. All subordinate policies, standards, procedures, and guidelines derive authority from this document.</p>
+
+  <h2>2. Scope</h2>
+  <p>This policy applies to:</p>
+  <ul>
+    <li>All information systems owned, operated, or managed by the organization</li>
+    <li>All employees, contractors, vendors, and third parties with access to organizational information or systems</li>
+    <li>All information regardless of format — digital, physical, or verbal — created, received, stored, or transmitted by the organization</li>
+    <li>All geographic locations and remote environments where organizational information is processed</li>
+  </ul>
+
+  <h2>3. Policy Statements</h2>
+
+  <h3>3.1 Organizational Commitment</h3>
+  <div class="policy-box">
+    The organization is committed to protecting its information assets from unauthorized access, disclosure, modification, destruction, and interference. This commitment is operationalized through a documented Information Security Management System (ISMS) aligned with NIST SP 800-53 Rev 5 and ISO 27001:2022.
+  </div>
+
+  <h3>3.2 Security Objectives</h3>
+  <p>The organization shall maintain the following security objectives, reviewed annually:</p>
+  <ul>
+    <li><strong>Confidentiality:</strong> Information is accessible only to those authorized to access it</li>
+    <li><strong>Integrity:</strong> Information is accurate, complete, and protected from unauthorized modification</li>
+    <li><strong>Availability:</strong> Information and systems are accessible to authorized users when required</li>
+    <li><strong>Non-repudiation:</strong> Actions and transactions can be attributed to their originating party</li>
+  </ul>
+
+  <h3>3.3 Risk Management</h3>
+  <p>The organization shall implement a formal risk management process consistent with NIST SP 800-30 Rev 1 and ISO 31000. All information security risks shall be identified, assessed, treated, and monitored. Risk acceptance decisions shall be documented and approved by appropriate authority.</p>
+  <p>Risk assessments shall be conducted at minimum annually, and upon significant changes to the system or threat environment.</p>
+
+  <h3>3.4 Roles and Responsibilities</h3>
+  <ul>
+    <li><strong>Information Security Officer (ISO):</strong> Responsible for development, implementation, and maintenance of the ISMS; reports to executive leadership</li>
+    <li><strong>System Owners:</strong> Accountable for the security of systems under their authority; responsible for ensuring controls are implemented and effective</li>
+    <li><strong>All Personnel:</strong> Responsible for complying with this policy and all subordinate policies; required to complete annual security awareness training</li>
+    <li><strong>Third Parties:</strong> Required to comply with organizational security requirements as specified in contractual agreements</li>
+  </ul>
+
+  <h3>3.5 Policy Hierarchy</h3>
+  <p>The following subordinate policies implement the requirements of this overarching policy. Each policy addresses a specific security domain:</p>
+  <ul>
+    <li><strong>POL-002</strong> — Access Control Policy</li>
+    <li><strong>POL-003</strong> — Incident Response Policy</li>
+    <li><strong>POL-004</strong> — Password and Authentication Policy</li>
+    <li><strong>POL-005</strong> — Vulnerability Management Policy</li>
+    <li><strong>POL-006</strong> — Risk Management Policy</li>
+  </ul>
+
+  <h3>3.6 Security Controls</h3>
+  <p>The organization shall implement and maintain security controls selected from the NIST SP 800-53 Rev 5 Moderate baseline, adapted to organizational risk profile. Controls shall be assessed annually and following significant system changes. A Plan of Action and Milestones (POA&M) shall be maintained for all identified control deficiencies.</p>
+
+  <h3>3.7 Compliance and Enforcement</h3>
+  <div class="warn-box">
+    Non-compliance with this policy may result in disciplinary action up to and including termination of employment or contract. Violations that constitute criminal activity shall be reported to appropriate law enforcement authorities. The organization reserves the right to monitor systems and communications for compliance purposes in accordance with applicable law and with notice to personnel.
+  </div>
+
+  <h3>3.8 Security Awareness and Training</h3>
+  <p>All personnel shall complete security awareness training upon onboarding and annually thereafter. Training shall cover, at minimum: phishing awareness, password hygiene, incident reporting procedures, and insider threat recognition. Training completion shall be documented and tracked. Personnel who do not complete required training within the designated period shall have system access suspended pending completion.</p>
+  <p>Training content is aligned with NIST SP 800-50 and covers controls required by NIST AT-2 and ISO 27001 A.6.3.</p>
+
+  <h3>3.9 Incident Management</h3>
+  <p>The organization shall maintain an incident response capability consistent with NIST SP 800-61 Rev 2. All security incidents shall be reported, documented, investigated, and reviewed for lessons learned. The incident response plan shall be tested at minimum annually through tabletop exercises or simulations.</p>
+
+  <h3>3.10 Third-Party and Supply Chain Security</h3>
+  <p>Third parties with access to organizational information or systems shall be subject to security assessment prior to engagement and periodically thereafter. Security requirements shall be incorporated into all contracts and service agreements. The organization shall maintain an inventory of all third-party relationships involving information access.</p>
+
+  <h3>3.11 Business Continuity</h3>
+  <p>The organization shall develop, maintain, and test a business continuity plan (BCP) and disaster recovery plan (DRP) to ensure the availability of critical information systems following a disruption. Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO) shall be defined and documented for all critical systems.</p>
+
+  <h2>4. Policy Review and Maintenance</h2>
+  <p>This policy shall be reviewed annually, following a significant security incident, upon material changes to the business or regulatory environment, or when directed by executive leadership. All revisions shall be documented in the version control table below.</p>
+
+  <h2>5. Related Documents</h2>
+  <ul>
+    <li>NIST SP 800-53 Rev 5 — Security and Privacy Controls for Information Systems</li>
+    <li>NIST SP 800-30 Rev 1 — Guide for Conducting Risk Assessments</li>
+    <li>NIST SP 800-61 Rev 2 — Computer Security Incident Handling Guide</li>
+    <li>ISO/IEC 27001:2022 — Information Security Management Systems</li>
+    <li>FIPS 199 — Standards for Security Categorization of Federal Information</li>
+  </ul>
+
+  <h2>6. Version History</h2>
+  <table class="version-table">
+    <thead><tr><th>Version</th><th>Date</th><th>Author</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1.0</td><td>June 2026</td><td>Binette</td><td>Initial release — ISMS establishment</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sig-block">
+    <div>
+      <div style="height:40px;"></div>
+      <div class="sig-line">Information Security Officer · Binette</div>
+    </div>
+    <div>
+      <div style="height:40px;"></div>
+      <div class="sig-line">Effective Date · June 2026</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

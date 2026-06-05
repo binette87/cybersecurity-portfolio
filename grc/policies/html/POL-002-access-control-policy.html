@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POL-002 — Access Control Policy</title>
+<style>
+  :root { --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149; }
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.7; }
+  .topbar { background:var(--surface);border-bottom:1px solid var(--border);padding:12px 40px;display:flex;align-items:center;justify-content:space-between; }
+  .topbar a { color:var(--blue);text-decoration:none;font-size:13px; }
+  .doc-wrap { max-width:900px;margin:0 auto;padding:40px 40px 80px; }
+  .doc-header { border-bottom:3px solid var(--blue);padding-bottom:24px;margin-bottom:32px; }
+  .doc-id { font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px; }
+  .doc-title { font-size:28px;font-weight:700;line-height:1.2;margin-bottom:16px; }
+  .doc-meta { display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px; }
+  .meta-item { background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px; }
+  .meta-label { font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px; }
+  .meta-value { font-size:13px;font-weight:600; }
+  h2 { font-size:16px;font-weight:700;color:var(--blue);margin:32px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border); }
+  h3 { font-size:14px;font-weight:700;margin:20px 0 8px; }
+  p { margin-bottom:12px;line-height:1.8; }
+  ul,ol { margin:8px 0 16px 20px; }
+  li { margin-bottom:6px;line-height:1.7; }
+  .policy-box { background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:6px;padding:16px 20px;margin:16px 0; }
+  .warn-box { background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);border-left:4px solid var(--red);border-radius:6px;padding:14px 18px;margin:14px 0; }
+  .control-ref { background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin:12px 0;display:flex;gap:16px;align-items:flex-start; }
+  .control-id { font-family:monospace;font-size:13px;color:var(--blue);font-weight:700;flex-shrink:0;width:60px; }
+  .control-text { font-size:13px;color:var(--muted);line-height:1.6; }
+  .ref-box { background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px 20px;margin:16px 0; }
+  .ref-tag { display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;margin:3px; }
+  .tag-nist { background:rgba(0,120,212,0.2);color:#58a6ff;border:1px solid rgba(0,120,212,0.3); }
+  .tag-iso { background:rgba(0,163,108,0.2);color:#3fb950;border:1px solid rgba(0,163,108,0.3); }
+  .tag-soc { background:rgba(163,113,247,0.2);color:#a371f7;border:1px solid rgba(163,113,247,0.3); }
+  .evidence-box { background:rgba(63,185,80,0.06);border:1px solid rgba(63,185,80,0.2);border-radius:6px;padding:12px 16px;margin:12px 0;font-size:12px; }
+  .version-table { width:100%;border-collapse:collapse;margin:16px 0; }
+  .version-table th { background:var(--surface2);padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border); }
+  .version-table td { padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px; }
+  .sig-block { display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px; }
+  .sig-line { border-top:1px solid var(--border);padding-top:8px;font-size:12px;color:var(--muted); }
+  @media print { body{background:#fff;color:#000;} .topbar{display:none;} }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="../../dashboard/index.html">← GRC Command Center</a>
+  <span style="color:var(--muted);font-size:12px;">POL-002 · Access Control Policy · v1.0</span>
+  <a href="#" onclick="window.print()">🖨 Print / Save PDF</a>
+</div>
+
+<div class="doc-wrap">
+  <div class="doc-header">
+    <div class="doc-id">POL-002 · Access Control</div>
+    <div class="doc-title">Access Control Policy</div>
+    <div style="font-size:13px;color:var(--muted);">Defines requirements for managing logical access to information systems, data, and resources based on the principle of least privilege.</div>
+    <div class="doc-meta">
+      <div class="meta-item"><div class="meta-label">Document ID</div><div class="meta-value">POL-002</div></div>
+      <div class="meta-item"><div class="meta-label">Version</div><div class="meta-value">1.0</div></div>
+      <div class="meta-item"><div class="meta-label">Parent Policy</div><div class="meta-value">POL-001</div></div>
+      <div class="meta-item"><div class="meta-label">Next Review</div><div class="meta-value">June 2027</div></div>
+    </div>
+  </div>
+
+  <div class="ref-box">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Framework Controls Implemented by This Policy</div>
+    <span class="ref-tag tag-nist">NIST AC-1 Access Control Policy</span>
+    <span class="ref-tag tag-nist">NIST AC-2 Account Management</span>
+    <span class="ref-tag tag-nist">NIST AC-3 Access Enforcement</span>
+    <span class="ref-tag tag-nist">NIST AC-6 Least Privilege</span>
+    <span class="ref-tag tag-nist">NIST AC-7 Unsuccessful Logon Attempts</span>
+    <span class="ref-tag tag-nist">NIST AC-11 Session Lock</span>
+    <span class="ref-tag tag-nist">NIST IA-2 Identification &amp; Authentication</span>
+    <span class="ref-tag tag-nist">NIST IA-4 Identifier Management</span>
+    <span class="ref-tag tag-nist">NIST IA-5 Authenticator Management</span>
+    <span class="ref-tag tag-iso">ISO A.5.15 Access Control</span>
+    <span class="ref-tag tag-iso">ISO A.8.2 Privileged Access Rights</span>
+    <span class="ref-tag tag-iso">ISO A.8.5 Secure Authentication</span>
+    <span class="ref-tag tag-soc">SOC 2 CC6.1 – CC6.3</span>
+  </div>
+
+  <h2>1. Purpose</h2>
+  <p>This policy establishes requirements for controlling access to organizational information systems, applications, and data. It ensures that access is granted based on documented business need, role, and the principle of least privilege. Unauthorized access to organizational information is one of the leading causes of data breaches and must be systematically prevented.</p>
+
+  <h2>2. Scope</h2>
+  <p>This policy applies to all information systems, applications, databases, and network resources owned or operated by the organization. It applies to all users including employees, contractors, vendors, and automated service accounts.</p>
+
+  <h2>3. Governing NIST Controls</h2>
+  <p>The following NIST SP 800-53 Rev 5 controls provide the authoritative requirement basis for this policy:</p>
+
+  <div class="control-ref">
+    <div class="control-id">AC-2</div>
+    <div class="control-text"><strong>Account Management:</strong> The organization manages information system accounts, including establishing, activating, modifying, reviewing, disabling, and removing accounts. Account actions require documented approval. Accounts are reviewed at minimum every 90 days.</div>
+  </div>
+  <div class="control-ref">
+    <div class="control-id">AC-3</div>
+    <div class="control-text"><strong>Access Enforcement:</strong> The information system enforces approved authorizations for logical access to information and system resources in accordance with applicable access control policies.</div>
+  </div>
+  <div class="control-ref">
+    <div class="control-id">AC-6</div>
+    <div class="control-text"><strong>Least Privilege:</strong> The organization employs the principle of least privilege, allowing only authorized accesses for users (or processes acting on behalf of users) which are necessary to accomplish assigned tasks.</div>
+  </div>
+  <div class="control-ref">
+    <div class="control-id">AC-7</div>
+    <div class="control-text"><strong>Unsuccessful Logon Attempts:</strong> The system enforces a limit of 5 consecutive invalid logon attempts during a 15-minute period. Upon reaching the limit, the system automatically locks the account for a minimum of 30 minutes.</div>
+  </div>
+  <div class="control-ref">
+    <div class="control-id">IA-2</div>
+    <div class="control-text"><strong>Identification and Authentication:</strong> The information system uniquely identifies and authenticates organizational users. Multi-factor authentication is required for all privileged accounts and all remote access.</div>
+  </div>
+  <div class="control-ref">
+    <div class="control-id">IA-5</div>
+    <div class="control-text"><strong>Authenticator Management:</strong> The organization manages information system authenticators by establishing minimum password complexity and change requirements, prohibiting password reuse, and expiring authenticators after a defined period.</div>
+  </div>
+
+  <h2>4. Policy Requirements</h2>
+
+  <h3>4.1 Account Provisioning</h3>
+  <div class="policy-box">
+    Access to organizational systems shall be provisioned only upon receipt of a formally approved access request. The request must specify the business justification, required access level, and system or resource. Provisioning must be completed by an authorized administrator and documented in the access management system.
+  </div>
+  <ul>
+    <li>All user accounts must be tied to a named individual — shared accounts are prohibited except for documented service accounts</li>
+    <li>Privileged accounts must be separate from standard user accounts — administrators must have both a standard account and a privileged account</li>
+    <li>Service accounts must have documented owners and undergo annual review</li>
+    <li>Third-party access must be time-limited and scoped to the minimum required for the engagement</li>
+  </ul>
+
+  <div class="evidence-box">
+    <strong style="color:var(--green);">📁 Lab Evidence:</strong> This control is implemented and evidenced by <code>onboard_engineers.ps1</code> (Week 05 — Active Directory provisioning automation) and <code>gpo_audit.txt</code> (Week 05 — Group Policy Object enforcement of account lifecycle). Source: <a href="https://github.com/binette87/Foundations_Lab_Final/tree/main/week-05_identity-access-active-directory" style="color:var(--blue);">Foundations_Lab_Final/week-05</a>
+  </div>
+
+  <h3>4.2 Role-Based Access Control (RBAC)</h3>
+  <p>Access to information and systems shall be granted based on roles aligned to job functions. The organization maintains a role catalog defining the access entitlements associated with each role.</p>
+  <ul>
+    <li>Access rights are assigned by role, not by individual where possible</li>
+    <li>Role assignments require manager approval and are documented</li>
+    <li>Roles are reviewed quarterly to ensure they reflect current job functions</li>
+    <li>Segregation of duties shall be enforced for sensitive functions — no single individual shall have end-to-end control over a critical process</li>
+  </ul>
+
+  <div class="evidence-box">
+    <strong style="color:var(--green);">📁 Lab Evidence:</strong> RBAC enforcement demonstrated via <code>gpo_audit.txt</code> — Group Policy Object audit confirming LSDOU inheritance model, RBAC group assignments, and permission boundary enforcement across the Active Directory domain. Source: <a href="https://github.com/binette87/Foundations_Lab_Final/tree/main/week-05_identity-access-active-directory" style="color:var(--blue);">Foundations_Lab_Final/week-05</a>
+  </div>
+
+  <h3>4.3 Least Privilege</h3>
+  <p>Users shall be granted the minimum access rights necessary to perform their assigned job functions. Elevated privileges shall not be granted by default.</p>
+  <ul>
+    <li>Standard users shall not have local administrator rights on workstations</li>
+    <li>Privileged access shall require separate privileged accounts — not elevation of standard accounts</li>
+    <li>Sudo access on Linux systems shall be configured per-command, not with wildcard rules</li>
+    <li>Privilege escalation requests shall be approved, time-limited, and logged</li>
+  </ul>
+
+  <div class="evidence-box">
+    <strong style="color:var(--green);">📁 Lab Evidence:</strong> Least privilege enforced on Linux systems via <code>harden.sh</code> (Week 01 — file permission hardening script). Sudo misconfiguration identified and remediated as documented in <code>system_auditor.py</code> findings (INC-005). Source: <a href="https://github.com/binette87/Foundations_Lab_Final/tree/main/week-01_linux-fundamentals" style="color:var(--blue);">Foundations_Lab_Final/week-01</a>
+  </div>
+
+  <h3>4.4 Account Termination and Modification</h3>
+  <p>Account access must be revoked or modified promptly upon changes in employment status or role assignment.</p>
+  <ul>
+    <li>Accounts for terminated personnel must be disabled within 4 hours of termination notification and deleted within 30 days</li>
+    <li>Access rights must be reviewed and adjusted within 5 business days of a role change</li>
+    <li>Accounts inactive for 90 consecutive days shall be automatically disabled</li>
+    <li>All account modifications shall be logged and auditable</li>
+  </ul>
+
+  <h3>4.5 Authentication Requirements</h3>
+  <p>All users must authenticate using strong credentials before accessing organizational systems. Authentication requirements are defined in POL-004 (Password and Authentication Policy) and summarized here:</p>
+  <ul>
+    <li>Passwords must meet minimum complexity requirements (see POL-004)</li>
+    <li>Multi-factor authentication (MFA) is mandatory for: all privileged accounts, all remote access (VPN), all email access, all administrative consoles</li>
+    <li>Failed authentication attempts shall be limited to 5 consecutive failures before account lockout</li>
+    <li>Session locks shall activate after 15 minutes of inactivity on all workstations</li>
+  </ul>
+
+  <div class="evidence-box">
+    <strong style="color:var(--green);">📁 Lab Evidence:</strong> Authentication enforcement via <code>gpo_audit.txt</code> (GPO password policy and account lockout), <code>brute_detector.py</code> (automated brute-force detection — Week 03), and <code>unified_identity.png</code> (Kerberos authentication across Windows domain and Linux systems — Week 05).
+  </div>
+
+  <h3>4.6 Remote Access</h3>
+  <p>Remote access to organizational systems shall be controlled and monitored. All remote connections must use encrypted channels (TLS 1.2 minimum).</p>
+  <ul>
+    <li>VPN is required for all remote access to internal network resources</li>
+    <li>MFA is required for all remote access sessions</li>
+    <li>Remote sessions shall time out after 30 minutes of inactivity</li>
+    <li>Remote access logs shall be retained for minimum 90 days</li>
+  </ul>
+
+  <div class="evidence-box">
+    <strong style="color:var(--green);">📁 Lab Evidence:</strong> Remote access control implemented via <code>firewall_config.sh</code> (UFW firewall rules restricting remote access — Week 11). SSH hardened to key-only authentication following INC-002 (SSH brute-force incident).
+  </div>
+
+  <h3>4.7 Access Reviews</h3>
+  <p>Access entitlements shall be reviewed on a regular schedule to identify and remove unnecessary or excessive access.</p>
+  <ul>
+    <li>All user access entitlements: reviewed quarterly by system owners</li>
+    <li>Privileged access: reviewed monthly</li>
+    <li>Service account access: reviewed annually</li>
+    <li>Third-party access: reviewed at contract renewal or annually, whichever is sooner</li>
+  </ul>
+
+  <h2>5. Violations</h2>
+  <div class="warn-box">
+    Attempting to access systems or data without authorization, circumventing access controls, sharing credentials, or granting unauthorized access to others constitutes a policy violation. Violations are subject to disciplinary action consistent with the severity of the breach, up to and including termination and legal action.
+  </div>
+
+  <h2>6. Related Policies and Documents</h2>
+  <ul>
+    <li>POL-001 — Information Security Policy (parent)</li>
+    <li>POL-004 — Password and Authentication Policy</li>
+    <li>NIST SP 800-53 Rev 5 — AC, IA control families</li>
+    <li>ISO/IEC 27001:2022 — Annex A controls A.5.15, A.8.2, A.8.3, A.8.5</li>
+  </ul>
+
+  <h2>7. Version History</h2>
+  <table class="version-table">
+    <thead><tr><th>Version</th><th>Date</th><th>Author</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1.0</td><td>June 2026</td><td>Binette</td><td>Initial release</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sig-block">
+    <div><div style="height:40px;"></div><div class="sig-line">Information Security Officer · Binette</div></div>
+    <div><div style="height:40px;"></div><div class="sig-line">Effective Date · June 2026</div></div>
+  </div>
+</div>
+</body>
+</html>

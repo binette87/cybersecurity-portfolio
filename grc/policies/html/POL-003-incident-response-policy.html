@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POL-003 — Incident Response Policy</title>
+<style>
+  :root { --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--orange:#fb8f44; }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.7;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 40px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar a{color:var(--blue);text-decoration:none;font-size:13px;}
+  .doc-wrap{max-width:900px;margin:0 auto;padding:40px 40px 80px;}
+  .doc-header{border-bottom:3px solid var(--orange);padding-bottom:24px;margin-bottom:32px;}
+  .doc-id{font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .doc-title{font-size:28px;font-weight:700;line-height:1.2;margin-bottom:16px;}
+  .doc-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px;}
+  .meta-item{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;}
+  .meta-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+  .meta-value{font-size:13px;font-weight:600;}
+  h2{font-size:16px;font-weight:700;color:var(--orange);margin:32px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  h3{font-size:14px;font-weight:700;margin:20px 0 8px;}
+  p{margin-bottom:12px;line-height:1.8;}
+  ul,ol{margin:8px 0 16px 20px;}
+  li{margin-bottom:6px;line-height:1.7;}
+  .policy-box{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--orange);border-radius:6px;padding:16px 20px;margin:16px 0;}
+  .warn-box{background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.3);border-left:4px solid var(--red);border-radius:6px;padding:14px 18px;margin:14px 0;}
+  .control-ref{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin:12px 0;display:flex;gap:16px;align-items:flex-start;}
+  .control-id{font-family:monospace;font-size:13px;color:var(--orange);font-weight:700;flex-shrink:0;width:60px;}
+  .control-text{font-size:13px;color:var(--muted);line-height:1.6;}
+  .ref-box{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px 20px;margin:16px 0;}
+  .ref-tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;margin:3px;}
+  .tag-nist{background:rgba(0,120,212,0.2);color:#58a6ff;border:1px solid rgba(0,120,212,0.3);}
+  .tag-iso{background:rgba(0,163,108,0.2);color:#3fb950;border:1px solid rgba(0,163,108,0.3);}
+  .tag-soc{background:rgba(163,113,247,0.2);color:#a371f7;border:1px solid rgba(163,113,247,0.3);}
+  .evidence-box{background:rgba(63,185,80,0.06);border:1px solid rgba(63,185,80,0.2);border-radius:6px;padding:12px 16px;margin:12px 0;font-size:12px;}
+  .sev-table{width:100%;border-collapse:collapse;margin:16px 0;}
+  .sev-table th{background:var(--surface2);padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);}
+  .sev-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;}
+  .version-table{width:100%;border-collapse:collapse;margin:16px 0;}
+  .version-table th{background:var(--surface2);padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);}
+  .version-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;}
+  .sig-block{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px;}
+  .sig-line{border-top:1px solid var(--border);padding-top:8px;font-size:12px;color:var(--muted);}
+  .phase-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin:10px 0;display:flex;gap:16px;align-items:flex-start;}
+  .phase-num{background:var(--orange);color:#000;font-weight:700;font-size:13px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  @media print{body{background:#fff;color:#000;}.topbar{display:none;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a href="../../dashboard/index.html">← GRC Command Center</a>
+  <span style="color:var(--muted);font-size:12px;">POL-003 · Incident Response Policy · v1.0</span>
+  <a href="#" onclick="window.print()">🖨 Print / Save PDF</a>
+</div>
+
+<div class="doc-wrap">
+  <div class="doc-header">
+    <div class="doc-id">POL-003 · Incident Response</div>
+    <div class="doc-title">Incident Response Policy</div>
+    <div style="font-size:13px;color:var(--muted);">Establishes the framework for detecting, reporting, containing, eradicating, and recovering from information security incidents.</div>
+    <div class="doc-meta">
+      <div class="meta-item"><div class="meta-label">Document ID</div><div class="meta-value">POL-003</div></div>
+      <div class="meta-item"><div class="meta-label">Version</div><div class="meta-value">1.0</div></div>
+      <div class="meta-item"><div class="meta-label">Parent Policy</div><div class="meta-value">POL-001</div></div>
+      <div class="meta-item"><div class="meta-label">Next Review</div><div class="meta-value">June 2027</div></div>
+    </div>
+  </div>
+
+  <div class="ref-box">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Framework Controls Implemented by This Policy</div>
+    <span class="ref-tag tag-nist">NIST IR-1 IR Policy &amp; Procedures</span>
+    <span class="ref-tag tag-nist">NIST IR-4 Incident Handling</span>
+    <span class="ref-tag tag-nist">NIST IR-5 Incident Monitoring</span>
+    <span class="ref-tag tag-nist">NIST IR-6 Incident Reporting</span>
+    <span class="ref-tag tag-nist">NIST IR-8 Incident Response Plan</span>
+    <span class="ref-tag tag-nist">NIST AU-6 Audit Review</span>
+    <span class="ref-tag tag-iso">ISO A.5.24 IR Management Planning</span>
+    <span class="ref-tag tag-iso">ISO A.5.25 Assessment of IS Events</span>
+    <span class="ref-tag tag-iso">ISO A.5.26 Response to IS Incidents</span>
+    <span class="ref-tag tag-iso">ISO A.5.27 Learning from Incidents</span>
+    <span class="ref-tag tag-iso">ISO A.5.28 Collection of Evidence</span>
+    <span class="ref-tag tag-soc">SOC 2 CC7.3 – CC7.5</span>
+  </div>
+
+  <h2>1. Purpose</h2>
+  <p>This policy establishes the organizational framework for managing information security incidents from initial detection through post-incident review. It defines roles, responsibilities, procedures, and timelines to ensure that security incidents are handled in a consistent, documented, and effective manner that minimizes impact to organizational operations and protects evidentiary integrity.</p>
+  <p>This policy is implemented in accordance with NIST SP 800-61 Rev 2, <em>Computer Security Incident Handling Guide</em>.</p>
+
+  <h2>2. Scope</h2>
+  <p>This policy applies to all security incidents — or suspected incidents — affecting organizational information systems, data, personnel, or operations. It applies to all employees, contractors, and third parties with access to organizational systems, who share the responsibility to detect and report potential incidents promptly.</p>
+
+  <h2>3. Governing NIST Controls</h2>
+
+  <div class="control-ref">
+    <div class="control-id">IR-4</div>
+    <div class="control-text"><strong>Incident Handling:</strong> The organization implements an incident handling capability for security incidents that includes preparation, detection and analysis, containment, eradication, and recovery. The organization coordinates incident handling activities with contingency planning activities.</div>
+  </div>
+  <div class="control-ref">
+    <div class="control-id">IR-5</div>
+    <div class="control-text"><strong>Incident Monitoring:</strong> The organization tracks and documents information system security incidents. All incidents are assigned unique identifiers, categorized by severity, and tracked through resolution in the incident register.</div>
+  </div>
+  <div class="control-ref">
+    <div class="control-id">IR-6</div>
+    <div class="control-text"><strong>Incident Reporting:</strong> The organization requires personnel to report suspected security incidents to the organizational incident response capability within defined timeframes. The organization reports information about incidents to designated external authorities as required.</div>
+  </div>
+  <div class="control-ref">
+    <div class="control-id">IR-8</div>
+    <div class="control-text"><strong>Incident Response Plan:</strong> The organization develops an incident response plan that provides the organization with a roadmap for implementing its incident response capability. The plan is reviewed and updated at minimum annually and following any major incident.</div>
+  </div>
+
+  <h2>4. Incident Classification</h2>
+  <p>All security incidents shall be classified by severity upon initial reporting. Classification determines response timelines and escalation requirements.</p>
+
+  <table class="sev-table">
+    <thead>
+      <tr><th>Severity</th><th>Definition</th><th>Examples</th><th>Initial Response SLA</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span style="color:var(--red);font-weight:700;">Critical</span></td>
+        <td>Active breach with confirmed data exfiltration, ransomware, or complete system compromise</td>
+        <td>Active ransomware encryption; confirmed data theft; system takeover</td>
+        <td><strong>15 minutes</strong></td>
+      </tr>
+      <tr>
+        <td><span style="color:var(--orange);font-weight:700;">High</span></td>
+        <td>Significant security event with material impact or high potential for escalation</td>
+        <td>Unauthorized privileged access; malware detected; credential compromise</td>
+        <td><strong>1 hour</strong></td>
+      </tr>
+      <tr>
+        <td><span style="color:var(--yellow);font-weight:700;">Medium</span></td>
+        <td>Security event with limited current impact but requiring investigation</td>
+        <td>Brute-force attacks; policy violations; suspicious account activity</td>
+        <td><strong>4 hours</strong></td>
+      </tr>
+      <tr>
+        <td><span style="color:var(--blue);font-weight:700;">Low</span></td>
+        <td>Security event with minimal impact; informational or reconnaissance activity</td>
+        <td>Port scans; failed login attempts below threshold; spam</td>
+        <td><strong>24 hours</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>5. Incident Response Lifecycle</h2>
+  <p>The organization follows the NIST SP 800-61 Rev 2 incident response lifecycle consisting of six phases:</p>
+
+  <div class="phase-box">
+    <div class="phase-num">1</div>
+    <div>
+      <strong>Preparation</strong><br>
+      <span style="font-size:13px;color:var(--muted);">Maintain IR capability, tools, contacts, and playbooks. Conduct annual tabletop exercises. Ensure all personnel have completed IR awareness training. Maintain current asset inventory and network documentation.</span>
+    </div>
+  </div>
+  <div class="phase-box">
+    <div class="phase-num">2</div>
+    <div>
+      <strong>Detection &amp; Analysis</strong><br>
+      <span style="font-size:13px;color:var(--muted);">Monitor systems for indicators of compromise via IDS, SIEM, endpoint monitoring, and user reports. Validate and triage reported events. Assign initial severity classification. Assign incident handler and open incident ticket.</span>
+    </div>
+  </div>
+  <div class="phase-box">
+    <div class="phase-num">3</div>
+    <div>
+      <strong>Containment</strong><br>
+      <span style="font-size:13px;color:var(--muted);">Isolate affected systems from the network. Preserve system state — do not power off affected systems unless directed. Implement short-term containment to prevent spread. Document all containment actions with timestamps.</span>
+    </div>
+  </div>
+  <div class="phase-box">
+    <div class="phase-num">4</div>
+    <div>
+      <strong>Eradication</strong><br>
+      <span style="font-size:13px;color:var(--muted);">Identify and eliminate the root cause. Remove malware, unauthorized accounts, or malicious code. Patch or remediate the vulnerability that was exploited. Verify eradication through forensic analysis before proceeding.</span>
+    </div>
+  </div>
+  <div class="phase-box">
+    <div class="phase-num">5</div>
+    <div>
+      <strong>Recovery</strong><br>
+      <span style="font-size:13px;color:var(--muted);">Restore affected systems from clean backups or rebuild from known-good state. Validate system integrity before returning to production. Monitor closely for 72 hours post-recovery for signs of recurrence.</span>
+    </div>
+  </div>
+  <div class="phase-box">
+    <div class="phase-num">6</div>
+    <div>
+      <strong>Post-Incident Activity</strong><br>
+      <span style="font-size:13px;color:var(--muted);">Conduct post-mortem within 5 business days. Document timeline, root cause, impact, actions taken, and lessons learned. Update IR playbooks, detection rules, and controls based on findings. Brief leadership on significant incidents.</span>
+    </div>
+  </div>
+
+  <div class="evidence-box">
+    <strong style="color:var(--green);">📁 Lab Evidence:</strong> Full IR lifecycle documented across: <code>Incident_Response_Report.md</code>, <code>Operation_Fortress_Report.md</code> (purple team ops), <code>tepp_postmortem.md</code> (post-mortem analysis), <code>attack_timeline.csv</code> (DFIR reconstruction), <code>escalation_path.txt</code> (escalation chain), <code>collection_log.txt</code> (chain-of-custody). Source: <a href="https://github.com/binette87/Foundations_Lab_Final/tree/main/week-10_dfir" style="color:var(--blue);">Foundations_Lab_Final/week-10</a>, <a href="https://github.com/binette87/Foundations_Lab_Final/tree/main/week-12_final-reckoning" style="color:var(--blue);">week-12</a>
+  </div>
+
+  <h2>6. Roles and Responsibilities</h2>
+  <ul>
+    <li><strong>Incident Handler:</strong> Leads the response to assigned incidents; coordinates containment, eradication, and recovery activities; documents all actions</li>
+    <li><strong>Security Analyst:</strong> Performs technical analysis, forensics, and artifact collection; maintains chain-of-custody for all evidence</li>
+    <li><strong>System Owner:</strong> Authorizes containment and recovery actions for systems under their authority; participates in post-incident review</li>
+    <li><strong>All Personnel:</strong> Responsible for reporting suspected incidents promptly; prohibited from independently investigating or attempting to remediate</li>
+    <li><strong>Legal/HR:</strong> Consulted for incidents involving potential criminal activity, employee conduct, or regulatory reporting requirements</li>
+  </ul>
+
+  <h2>7. Evidence Handling and Chain of Custody</h2>
+  <div class="policy-box">
+    All evidence collected during incident response shall be handled in accordance with chain-of-custody procedures. Evidence must be documented with: item description, collection date/time, collector identity, storage location, and handling history. Evidence shall not be altered, deleted, or transferred without documented authorization. Forensic copies shall be made before analysis of original media.
+  </div>
+
+  <div class="evidence-box">
+    <strong style="color:var(--green);">📁 Lab Evidence:</strong> Evidence handling procedures demonstrated in <code>collection_log.txt</code> (chain-of-custody documentation), <code>forensic_report.pdf</code> (full forensic analysis), and <code>forensic_findings.md</code>. Memory and disk forensics conducted using Volatility and Autopsy. Source: <a href="https://github.com/binette87/Foundations_Lab_Final/tree/main/week-10_dfir" style="color:var(--blue);">Foundations_Lab_Final/week-10</a>
+  </div>
+
+  <h2>8. External Reporting Requirements</h2>
+  <p>Certain incidents may require external notification to regulatory authorities, law enforcement, or affected individuals. External reporting decisions shall be made in consultation with legal counsel and executive leadership.</p>
+  <ul>
+    <li>Data breaches involving personal information: notify affected individuals per applicable privacy law</li>
+    <li>Incidents involving criminal activity: coordinate with law enforcement as appropriate</li>
+    <li>Incidents affecting critical infrastructure: report to CISA and applicable sector-specific agencies</li>
+    <li>All external communications regarding incidents require executive approval</li>
+  </ul>
+
+  <h2>9. Testing and Maintenance</h2>
+  <p>The incident response plan shall be tested at minimum annually through tabletop exercises simulating realistic threat scenarios. Results of testing shall be documented and used to update the plan. The incident response capability shall also be evaluated following any significant real incident.</p>
+
+  <div class="evidence-box">
+    <strong style="color:var(--green);">📁 Lab Evidence:</strong> IR plan tested via purple team exercise documented in <code>Operation_Fortress_Report.md</code> — full red/blue team engagement simulating realistic attack scenarios including lateral movement, credential attack, and persistence. Tabletop exercise results documented in AUD-005. Source: <a href="https://github.com/binette87/Foundations_Lab_Final/tree/main/week-12_final-reckoning" style="color:var(--blue);">Foundations_Lab_Final/week-12</a>
+  </div>
+
+  <h2>10. Related Documents</h2>
+  <ul>
+    <li>POL-001 — Information Security Policy (parent)</li>
+    <li>NIST SP 800-61 Rev 2 — Computer Security Incident Handling Guide</li>
+    <li>NIST SP 800-86 — Integration of Forensic Techniques into Incident Response</li>
+    <li>ISO/IEC 27035 — Information Security Incident Management</li>
+    <li><a href="../../grc/incident-log/incident-log.html" style="color:var(--blue);">Incident Log →</a></li>
+  </ul>
+
+  <h2>11. Version History</h2>
+  <table class="version-table">
+    <thead><tr><th>Version</th><th>Date</th><th>Author</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>1.0</td><td>June 2026</td><td>Binette</td><td>Initial release — based on NIST SP 800-61 Rev 2</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sig-block">
+    <div><div style="height:40px;"></div><div class="sig-line">Information Security Officer · Binette</div></div>
+    <div><div style="height:40px;"></div><div class="sig-line">Effective Date · June 2026</div></div>
+  </div>
+</div>
+</body>
+</html>
