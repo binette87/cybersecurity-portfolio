@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Risk Register — GRC Command Center</title>
+<style>:root{--bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--orange:#fb8f44;--purple:#a371f7;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;}
+.pg-wrap{max-width:1300px;margin:0 auto;padding:28px 24px 80px;}
+.pg-header{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.pg-title{font-size:22px;font-weight:700;margin-bottom:6px;}
+.pg-sub{font-size:13px;color:var(--muted);}
+.ref-tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;margin:3px;}
+.tag-nist{background:rgba(0,120,212,0.2);color:#58a6ff;border:1px solid rgba(0,120,212,0.3);}
+.tag-iso{background:rgba(0,163,108,0.2);color:#3fb950;border:1px solid rgba(0,163,108,0.3);}
+.tag-soc{background:rgba(163,113,247,0.2);color:#a371f7;border:1px solid rgba(163,113,247,0.3);}
+table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:8px;overflow:hidden;}
+th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid var(--border);}
+td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+.b-impl{background:rgba(63,185,80,0.15);color:#3fb950;border:1px solid rgba(63,185,80,0.3);}
+.b-part{background:rgba(210,153,34,0.15);color:#d29922;border:1px solid rgba(210,153,34,0.3);}
+.b-no{background:rgba(248,81,73,0.15);color:#f85149;border:1px solid rgba(248,81,73,0.3);}
+.b-open{background:rgba(248,81,73,0.15);color:#f85149;border:1px solid rgba(248,81,73,0.3);}
+.b-closed{background:rgba(63,185,80,0.15);color:#3fb950;border:1px solid rgba(63,185,80,0.3);}
+.b-prog{background:rgba(88,166,255,0.15);color:#58a6ff;border:1px solid rgba(88,166,255,0.3);}
+.b-planned{background:rgba(139,148,158,0.15);color:#8b949e;border:1px solid rgba(139,148,158,0.3);}
+.b-high{background:rgba(251,143,68,0.15);color:#fb8f44;border:1px solid rgba(251,143,68,0.3);}
+.b-crit{background:rgba(248,81,73,0.15);color:#f85149;border:1px solid rgba(248,81,73,0.3);}
+.b-med{background:rgba(210,153,34,0.15);color:#d29922;border:1px solid rgba(210,153,34,0.3);}
+.b-low{background:rgba(63,185,80,0.15);color:#3fb950;border:1px solid rgba(63,185,80,0.3);}
+.mono{font-family:monospace;color:var(--blue);font-size:12px;font-weight:700;}
+.filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-size:12px;transition:all 0.15s;}
+.filter-btn:hover,.filter-btn.on{background:var(--blue);border-color:var(--blue);color:#000;font-weight:600;}
+.stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 16px;text-align:center;}
+.stat-n{font-size:20px;font-weight:700;} .stat-l{font-size:11px;color:var(--muted);}
+.evidence{font-size:11px;color:var(--muted);font-style:italic;}
+a{color:var(--blue);text-decoration:none;} a:hover{text-decoration:underline;}
+  .site-nav{background:var(--surface);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:200;}
+  .site-nav-inner{max-width:1300px;margin:0 auto;padding:0 24px;display:flex;align-items:stretch;}
+  .site-nav-brand{display:flex;align-items:center;gap:10px;padding:12px 20px 12px 0;border-right:1px solid var(--border);margin-right:8px;text-decoration:none;flex-shrink:0;}
+  .logo-icon{font-size:18px;} .logo-text{font-size:14px;font-weight:700;color:var(--blue);} .logo-sub{font-size:10px;color:var(--muted);}
+  .nav-links{display:flex;align-items:stretch;overflow-x:auto;flex:1;}
+  .nav-link{display:flex;align-items:center;gap:5px;padding:0 12px;font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap;}
+  .nav-link:hover{color:var(--text);background:var(--surface2);}
+  .nav-link.active{color:var(--blue);border-bottom-color:var(--blue);background:rgba(88,166,255,0.05);}
+  .nav-icon{font-size:13px;}
+  .nav-right{display:flex;align-items:center;gap:6px;margin-left:auto;padding-left:12px;flex-shrink:0;}
+  .nav-badge{padding:2px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;}
+  .nb-nist{background:rgba(0,120,212,0.2);color:#58a6ff;border:1px solid rgba(0,120,212,0.3);}
+  .nb-iso{background:rgba(0,163,108,0.2);color:#3fb950;border:1px solid rgba(0,163,108,0.3);}
+  .nb-soc{background:rgba(123,47,190,0.2);color:#a371f7;border:1px solid rgba(123,47,190,0.3);}
+</style></head>
+<body>
+<nav class="site-nav"><div class="site-nav-inner">
+  <a class="site-nav-brand" href="../../dashboard/index.html"><span class="logo-icon">🛡️</span><div><div class="logo-text">GRC Command Center</div><div class="logo-sub">binette87</div></div></a>
+  <div class="nav-links"><a class="nav-link" href="../../dashboard/index.html"><span class="nav-icon">📊</span> Dashboard</a><a class="nav-link" href="../../dashboard/index.html#policies-section"><span class="nav-icon">📋</span> Policies</a><a class="nav-link" href="../../grc/frameworks/nist-800-53/control-library.html"><span class="nav-icon">🔵</span> NIST 800-53</a><a class="nav-link" href="../../grc/frameworks/iso-27001/control-library.html"><span class="nav-icon">🟢</span> ISO 27001</a><a class="nav-link" href="../../grc/frameworks/soc2/control-library.html"><span class="nav-icon">🟣</span> SOC 2</a><a class="nav-link active" href="../../grc/risk-register/risk-register.html"><span class="nav-icon">🔴</span> Risk Register</a><a class="nav-link" href="../../grc/incident-log/incident-log.html"><span class="nav-icon">🚨</span> Incidents</a><a class="nav-link" href="../../grc/remediation/remediation-tracker.html"><span class="nav-icon">🔧</span> Remediation</a><a class="nav-link" href="../../grc/audits/audit-schedule.html"><span class="nav-icon">📋</span> Audits</a><a class="nav-link" href="../../dashboard/index.html#sat-section"><span class="nav-icon">🎓</span> Training</a></div>
+  <div class="nav-right"><span class="nav-badge nb-nist">NIST</span><span class="nav-badge nb-iso">ISO</span><span class="nav-badge nb-soc">SOC 2</span></div>
+</div></nav>
+<div class="pg-wrap">
+  <div class="pg-header">
+    <div class="pg-title">Risk Register</div>
+    <div class="pg-sub" style="margin-bottom:10px;">15 risks · Likelihood × Impact scoring · NIST SP 800-30 methodology</div>
+    <div><span class="ref-tag tag-nist">NIST RA-3</span><span class="ref-tag tag-iso">ISO A.5.7</span><span class="ref-tag tag-soc">SOC CC3.2</span></div>
+  </div>
+  <div class="stats">
+<div class="stat"><div class="stat-n" style="color:var(--red)">13</div><div class="stat-l">Open Risks</div></div>
+<div class="stat"><div class="stat-n" style="color:var(--orange)">0</div><div class="stat-l">High/Critical</div></div>
+<div class="stat"><div class="stat-n" style="color:var(--yellow)">0</div><div class="stat-l">Medium</div></div>
+<div class="stat"><div class="stat-n">15</div><div class="stat-l">Total Risks</div></div>
+</div>
+  <table>
+<thead><tr><th>Risk ID</th><th>Risk Title</th><th>Category</th><th>Likelihood</th><th>Impact</th><th>Score</th><th>Level</th><th>Controls</th><th>Treatment</th><th>Status</th></tr></thead>
+<tbody><tr>
+<td><span class="mono" style="color:var(--red)">RK-001</span></td>
+<td><strong>Brute Force Credential Attack</strong></td>
+<td style="font-size:12px;color:var(--muted);">Authentication</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">4</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">4</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">16</td>
+<td>brute_detector.py; GPO lockout</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 03/05</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-002</span></td>
+<td><strong>SQL Injection Attack</strong></td>
+<td style="font-size:12px;color:var(--muted);">App Security</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">5</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">15</td>
+<td>sqli_report.txt; WAF rules</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 08-09</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-003</span></td>
+<td><strong>Lateral Movement</strong></td>
+<td style="font-size:12px;color:var(--muted);">Network Security</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">5</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">15</td>
+<td>docker-compose.yml; firewall_config.sh</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">In Progress</td>
+<td><span class="badge b-planned">week 04/11</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-004</span></td>
+<td><strong>Cross-Site Scripting (XSS)</strong></td>
+<td style="font-size:12px;color:var(--muted);">App Security</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">4</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">12</td>
+<td>CSP deployed; output encoding</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 08-09</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-005</span></td>
+<td><strong>Privilege Escalation</strong></td>
+<td style="font-size:12px;color:var(--muted);">Access Control</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">2</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">5</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">10</td>
+<td>harden.sh; GPO enforcement</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 01/05</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-006</span></td>
+<td><strong>Data Exfiltration via Malware</strong></td>
+<td style="font-size:12px;color:var(--muted);">Malware</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">4</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">12</td>
+<td>custom_ids.rules; edr_policy.xml</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 11</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-007</span></td>
+<td><strong>Unpatched Critical CVE</strong></td>
+<td style="font-size:12px;color:var(--muted);">Vuln Mgmt</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">5</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">15</td>
+<td>remediation_plan.md</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 07</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-008</span></td>
+<td><strong>Insider Threat — Data Theft</strong></td>
+<td style="font-size:12px;color:var(--muted);">Insider Threat</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">2</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">5</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">10</td>
+<td>gpo_audit.txt; audit logging</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 05/10</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-009</span></td>
+<td><strong>Container Escape</strong></td>
+<td style="font-size:12px;color:var(--muted);">Containerization</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">2</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">4</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">8</td>
+<td>Non-privileged container configs</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 04</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-010</span></td>
+<td><strong>Phishing Attack</strong></td>
+<td style="font-size:12px;color:var(--muted);">Social Engineering</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">4</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">12</td>
+<td>None (gap)</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">—</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-011</span></td>
+<td><strong>Denial of Service Attack</strong></td>
+<td style="font-size:12px;color:var(--muted);">Availability</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">2</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">6</td>
+<td>UFW rate limiting</td>
+<td style="font-size:12px;color:var(--muted);">Accept</td>
+<td style="font-size:12px;color:var(--muted);">Accepted</td>
+<td><span class="badge b-planned">week 11</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-012</span></td>
+<td><strong>Evidence Tampering</strong></td>
+<td style="font-size:12px;color:var(--muted);">Forensics</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">4</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">12</td>
+<td>collection_log.txt; system_auditor.py</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 10/03</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-013</span></td>
+<td><strong>Third-Party Vendor Risk</strong></td>
+<td style="font-size:12px;color:var(--muted);">Supply Chain</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">4</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">12</td>
+<td>None (gap)</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">—</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-014</span></td>
+<td><strong>Inadequate Backup & Recovery</strong></td>
+<td style="font-size:12px;color:var(--muted);">BC/DR</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">2</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">4</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">8</td>
+<td>backup_discovery.txt</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 08-09</span></td>
+</tr><tr>
+<td><span class="mono" style="color:var(--red)">RK-015</span></td>
+<td><strong>Network Reconnaissance</strong></td>
+<td style="font-size:12px;color:var(--muted);">Network Security</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-size:13px;color:var(--blue);font-weight:700;">3</td>
+<td style="text-align:center;font-weight:700;font-size:14px;">9</td>
+<td>nmap_scan_results.txt; IDS rules</td>
+<td style="font-size:12px;color:var(--muted);">Mitigate</td>
+<td style="font-size:12px;color:var(--muted);">Open</td>
+<td><span class="badge b-planned">week 07/11</span></td>
+</tr></tbody></table>
+</div>
+</body></html>
